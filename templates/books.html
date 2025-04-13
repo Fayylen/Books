@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}Мои книги{% endblock %}
+{% block content %}
+<div class="dashboard">
+    <div class="sidebar">
+        <div class="welcome">Добро пожаловать, {{ current_user.username }}!</div>
+        <nav class="menu">
+            <a href="{{ url_for('books') }}" class="active">Список книг</a>
+            <a href="{{ url_for('stats') }}">Статистика</a>
+            <a href="{{ url_for('settings') }}">Настройки профиля</a>
+            <a href="{{ url_for('logout') }}" class="logout">Выход</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        {% if view_user and view_user.id != current_user.id %}
+        <div class="viewing-as">
+            Просматриваете книги пользователя: <strong>{{ view_user.username }}</strong>
+            <a href="{{ url_for('books') }}" class="btn btn-small">Вернуться к своим</a>
+        </div>
+        {% endif %}
+
+        <h1>
+            {% if view_user and view_user.id != current_user.id %}
+                Книги {{ view_user.username }}
+            {% else %}
+                Мои книги
+            {% endif %}
+        </h1>
+
+        {% if not (view_user and view_user.id != current_user.id) %}
+        <div class="add-book">
+            <h2>Добавить новую книгу</h2>
+            <form method="post" action="{{ url_for('add_book') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-row">
+                    <input type="text" name="title" placeholder="Название книги" required>
+                    <input type="text" name="author" placeholder="Автор" required>
+                </div>
+                <div class="form-row">
+                    <select name="status">
+                        <option value="Не прочитана">Не прочитана</option>
+                        <option value="В процессе">В процессе</option>
+                        <option value="Прочитана">Прочитана</option>
+                    </select>
+                    <div class="rating-container">
+                        <label>Оценка: <span class="rating-value">5</span>/10</label>
+                        {% raw %}
+                        <input type="range" name="rating" min="1" max="10" value="5"
+                               oninput="this.previousElementSibling.querySelector('.rating-value').textContent = this.value">
+                        {% endraw %}
+                    </div>
+                </div>
+                <button type="submit">Добавить книгу</button>
+            </form>
+        </div>
+
+        <form method="get" action="{{ url_for('books') }}" class="filters-container">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">Название</label>
+                    <input type="text" class="filter-input" name="title_filter" placeholder="Поиск по названию"
+                           value="{{ request.args.get('title_filter', '') }}">
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Автор</label>
+                    <input type="text" class="filter-input" name="author_filter" placeholder="Поиск по автору"
+                           value="{{ request.args.get('author_filter', '') }}">
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Статус</label>
+                    <select class="filter-select" name="status_filter">
+                        <option value="">Все статусы</option>
+                        <option value="Не прочитана" {% if request.args.get('status_filter') == 'Не прочитана' %}selected{% endif %}>Не прочитана</option>
+                        <option value="В процессе" {% if request.args.get('status_filter') == 'В процессе' %}selected{% endif %}>В процессе</option>
+                        <option value="Прочитана" {% if request.args.get('status_filter') == 'Прочитана' %}selected{% endif %}>Прочитана</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Мин оценка</label>
+                    <input type="number" class="filter-input" name="min_rating" min="1" max="10" placeholder="1-10"
+                           value="{{ request.args.get('min_rating', '') }}">
+                </div>
+
+                <button type="submit" class="filter-btn">Применить</button>
+                <a href="{{ url_for('books') }}" class="filter-btn" style="background-color: var(--gray-color);">Сбросить</a>
+            </div>
+        </form>
+        {% endif %}
+
+        <div class="books-list">
+            <div class="books-count">{{ books.total }} книг</div>
+
+            {% for book in books.items %}
+            <div class="book-card">
+                <form method="post" action="{{ url_for('delete_book', book_id=book.id) }}" class="delete-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="delete-btn" title="Удалить книгу">×</button>
+                </form>
+
+                <div>
+                    <div class="book-title">{{ book.title }}</div>
+                    <div class="book-author">{{ book.author }}</div>
+
+                    <div class="book-meta">
+                        <form method="post" action="{{ url_for('update_status', book_id=book.id) }}" class="status-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <select name="status" class="status-select" onchange="this.form.submit()">
+                                <option value="Не прочитана" {% if book.status == 'Не прочитана' %}selected{% endif %}>Не прочитана</option>
+                                <option value="В процессе" {% if book.status == 'В процессе' %}selected{% endif %}>В процессе</option>
+                                <option value="Прочитана" {% if book.status == 'Прочитана' %}selected{% endif %}>Прочитана</option>
+                            </select>
+                        </form>
+                        <div class="book-rating">Оценка: <strong>{{ book.rating }}/10</strong></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="pagination">
+            {% if books.has_prev %}
+                <a href="{{ url_for('books', page=books.prev_num, 
+                                  title_filter=request.args.get('title_filter'),
+                                  author_filter=request.args.get('author_filter'),
+                                  status_filter=request.args.get('status_filter'), 
+                                  min_rating=request.args.get('min_rating')) }}" 
+                   class="page-link">← Предыдущая</a>
+            {% endif %}
+
+            <span class="page-info">Страница {{ books.page }} из {{ books.pages }}</span>
+
+            {% if books.has_next %}
+                <a href="{{ url_for('books', page=books.next_num,
+                                  title_filter=request.args.get('title_filter'),
+                                  author_filter=request.args.get('author_filter'),
+                                  status_filter=request.args.get('status_filter'),
+                                  min_rating=request.args.get('min_rating')) }}" 
+                   class="page-link">Следующая →</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Вход{% endblock %}
+{% block content %}
+<div class="auth-container">
+    <h2>Вход</h2>
+    <form method="post" class="auth-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input name="username" placeholder="Логин" required>
+        <input name="password" placeholder="Пароль" type="password" required>
+        <button type="submit">Войти</button>
+    </form>
+    <div class="auth-links">
+        Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a>
+    </div>
+</div>
+{% endblock %}

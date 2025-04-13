@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        // Функция для временного отображения сообщений
+        window.onload = function () {
+            let flashes = document.querySelector('.flashes');
+            if (flashes) {
+                flashes.style.display = 'block'; // Показываем сообщение
+                setTimeout(function () {
+                    flashes.classList.add('hidden'); // Скрываем сообщение
+                    setTimeout(function () {
+                        flashes.style.display = 'none'; // Убираем сообщение из DOM
+                    }, 500); // Подождем 0.5 секунды перед удалением из DOM
+                }, 3000); // Ожидаем 3 секунды перед исчезновением
+            }
+        }
+    </script>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flashes">
+                {% for category, message in messages %}
+                    <div class="{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    {% block content %}{% endblock %}
+</body>
+</html>

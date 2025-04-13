@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Настройки профиля{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="sidebar">
+        <div class="welcome">Добро пожаловать, {{ current_user.username }}!</div>
+        <nav class="menu">
+            <a href="{{ url_for('books') }}">Список книг</a>
+            <a href="{{ url_for('stats') }}">Статистика</a>
+            <a href="{{ url_for('settings') }}" class="active">Настройки профиля</a>
+            <a href="{{ url_for('logout') }}" class="logout">Выход</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <h1>Настройки профиля</h1>
+        
+        <!-- Блок администратора -->
+        {% if current_user.username == 'admin' and current_user.is_admin %}
+        <div class="admin-section">
+            <h2>Администрирование</h2>
+            <div class="admin-actions">
+                <form method="GET" action="{{ url_for('books') }}" class="user-select-form">
+                    <div class="form-group">
+                        <label for="user_select">Просмотр пользователя:</label>
+                        <select id="user_select" name="user_id" class="form-control">
+                            <option value="">-- Выберите пользователя --</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-view" formaction="{{ url_for('books') }}">
+                            Список книг
+                        </button>
+                        <button type="submit" class="btn btn-view" formaction="{{ url_for('stats') }}">
+                            Статистика
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Основные настройки профиля -->
+        <div class="profile-settings">
+            <h2>Изменение данных</h2>
+            <form method="POST" action="{{ url_for('settings') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="form-group">
+                    <label for="username">Новый логин:</label>
+                    <input type="text" id="username" name="username" class="form-control" value="{{ current_user.username }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Текущий пароль:</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Введите текущий пароль" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="new_password">Новый пароль:</label>
+                    <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Введите новый пароль">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Подтвердите новый пароль:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Подтвердите новый пароль">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

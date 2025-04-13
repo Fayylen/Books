@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: book-catalog
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: SECRET_KEY
+        value: Secretkey1234567890
+      - key: DATABASE_URL
+        value: postgresql://book_catalog_db_xslt_user:VHfMW1DzScccBezBUINKCH4u8wLtBWQo@dpg-cvtlraje5dus73ab3du0-a/book_catalog_db_xslt

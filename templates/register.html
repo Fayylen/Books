@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Регистрация{% endblock %}
+{% block content %}
+<div class="auth-container">
+    <h2>Регистрация</h2>
+    <form method="post" class="auth-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input name="username" placeholder="Логин" required>
+        <input name="password" placeholder="Пароль" type="password" required>
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+    <div class="auth-links">
+        Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a>
+    </div>
+</div>
+{% endblock %}
